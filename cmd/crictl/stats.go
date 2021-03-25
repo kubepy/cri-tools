@@ -204,9 +204,12 @@ func displayStats(client pb.RuntimeServiceClient, request *pb.ListContainerStats
 		return err
 	}
 
-	display.AddRow([]string{columnContainer, columnCPU, columnMemory, columnDisk, columnInodes})
+	display.AddRow([]string{columnContainer, columnName, columnNamespace, columnPodID, columnCPU, columnMemory, columnDisk, columnInodes})
 	for _, s := range r.GetStats() {
 		id := getTruncatedID(s.Attributes.Id, "")
+		name := s.Attributes.Metadata.Name
+		namespace := s.Attributes.Labels["io.kubernetes.pod.namespace"]
+		podname := s.Attributes.Labels["io.kubernetes.pod.name"]
 		cpu := s.GetCpu().GetUsageCoreNanoSeconds().GetValue()
 		mem := s.GetMemory().GetWorkingSetBytes().GetValue()
 		disk := s.GetWritableLayer().GetUsedBytes().GetValue()
@@ -229,7 +232,7 @@ func displayStats(client pb.RuntimeServiceClient, request *pb.ListContainerStats
 			}
 			cpuPerc = float64(cpu-old.GetCpu().GetUsageCoreNanoSeconds().GetValue()) / float64(duration) * 100
 		}
-		display.AddRow([]string{id, fmt.Sprintf("%.2f", cpuPerc), units.HumanSize(float64(mem)),
+		display.AddRow([]string{id, name, namespace, podname, fmt.Sprintf("%.2f", cpuPerc), units.HumanSize(float64(mem)),
 			units.HumanSize(float64(disk)), fmt.Sprintf("%d", inodes)})
 
 	}
